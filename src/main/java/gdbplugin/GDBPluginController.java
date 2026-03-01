@@ -41,7 +41,9 @@ public class GDBPluginController {
         }
     }
 
-    //Start commands
+    // Start commands
+
+    // Starting everything
 
     public void startEverything(Program program, Integer port) {
         try {
@@ -63,24 +65,23 @@ public class GDBPluginController {
             connectToProgram(programPath);
 
             writeOutput("GDB started");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             writeOutput("Failed to start GDB: " + e.getMessage());
         }
     }
 
     private void startGdb() throws IOException {
         ProcessBuilder pb = new ProcessBuilder(
-            "gdb",
-            "--interpreter=mi2");
+                "gdb",
+                "--interpreter=mi2");
 
         pb.redirectErrorStream(true);
         gdb = pb.start();
 
         gdbIn = new BufferedWriter(
-            new OutputStreamWriter(gdb.getOutputStream()));
+                new OutputStreamWriter(gdb.getOutputStream()));
         gdbOut = new BufferedReader(
-            new InputStreamReader(gdb.getInputStream()));
+                new InputStreamReader(gdb.getInputStream()));
 
         ioThreads.submit(this::readGdbOutput);
     }
@@ -94,7 +95,8 @@ public class GDBPluginController {
         send("starti");
     }
 
-    //Function to create a console that simulates real output of running the program
+    // Function to create a console that simulates real output of running the
+    // program
 
     private void configureInferiorConsole() throws IOException {
         String osName = System.getProperty("os.name", "").toLowerCase();
@@ -118,8 +120,7 @@ public class GDBPluginController {
 
         try {
             Thread.sleep(200);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
         }
     }
 
@@ -137,8 +138,7 @@ public class GDBPluginController {
             send("-file-exec-and-symbols \"" + currentProgram.getExecutablePath() + "\"");
             send("-exec-run");
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             writeOutput("Error restarting program: " + e.getMessage());
         }
     }
@@ -147,7 +147,7 @@ public class GDBPluginController {
         this.currentProgram = program;
     }
 
-    //Breakpoint commands
+    // Breakpoint commands
 
     public void setBreakpoint(String location, Boolean temporary, Boolean hardware,
             Boolean disabled, String condition, Integer ignoreCount) throws IOException {
@@ -207,8 +207,7 @@ public class GDBPluginController {
     public void breakpointInfo(Integer number) throws IOException {
         if (number == null) {
             send("-break-info");
-        }
-        else {
+        } else {
             send("-break-info " + number);
         }
     }
@@ -216,8 +215,7 @@ public class GDBPluginController {
     public void breakAfter(int breakpointNumber, Integer count) throws IOException {
         if (count == null) {
             send("-break-after " + breakpointNumber);
-        }
-        else {
+        } else {
             send("-break-after " + breakpointNumber + " " + count);
         }
     }
@@ -225,8 +223,7 @@ public class GDBPluginController {
     public void setBreakpointCondition(int breakpointNumber, String condition) throws IOException {
         if (condition == null || condition.isEmpty()) {
             send("-break-condition " + breakpointNumber);
-        }
-        else {
+        } else {
             send("-break-condition " + breakpointNumber + " " + condition);
         }
     }
@@ -235,8 +232,7 @@ public class GDBPluginController {
             throws IOException {
         if (condition == null || condition.isEmpty()) {
             send("-break-condition --force " + breakpointNumber);
-        }
-        else {
+        } else {
             send("-break-condition --force " + breakpointNumber + " " + condition);
         }
     }
@@ -251,7 +247,7 @@ public class GDBPluginController {
         send(sb.toString());
     }
 
-    //Watching commands
+    // Watching commands
 
     public void dprintf(String location, String format, String... args) throws IOException {
         if (location == null || location.isEmpty()) {
@@ -310,13 +306,12 @@ public class GDBPluginController {
     public void setTracepointPasscount(int tracepointNumber, Integer passcount) throws IOException {
         if (passcount == null) {
             send("-break-passcount " + tracepointNumber);
-        }
-        else {
+        } else {
             send("-break-passcount " + tracepointNumber + " " + passcount);
         }
     }
 
-    //Program setting commands
+    // Program setting commands
 
     public void setProgramArguments(String... args) throws IOException {
         StringBuilder sb = new StringBuilder("-exec-arguments");
@@ -399,7 +394,7 @@ public class GDBPluginController {
         send("-environment-pwd");
     }
 
-    //Thread commands
+    // Thread commands
 
     public void threadInfo() throws IOException {
         threadInfo(null);
@@ -408,8 +403,7 @@ public class GDBPluginController {
     public void threadInfo(Integer threadId) throws IOException {
         if (threadId == null) {
             send("-thread-info");
-        }
-        else {
+        } else {
             send("-thread-info " + threadId);
         }
     }
@@ -434,15 +428,14 @@ public class GDBPluginController {
     private void adaTaskInfo(Integer taskId) throws IOException {
         if (taskId == null) {
             send("-ada-task-info");
-        }
-        else {
+        } else {
             send("-ada-task-info " + taskId);
         }
     }
 
-    //Running commands
+    // Running commands
 
-    //Run
+    // Run
 
     public void run() throws IOException {
         run(null, false, false);
@@ -471,7 +464,7 @@ public class GDBPluginController {
         send(sb.toString());
     }
 
-    //Continue
+    // Continue
 
     public void continueExec() throws IOException {
         continueExec(null, false, false);
@@ -500,7 +493,7 @@ public class GDBPluginController {
         send(sb.toString());
     }
 
-    //Interrupt
+    // Interrupt
     public void interrupt() throws IOException {
         interrupt(null, false);
     }
@@ -522,7 +515,7 @@ public class GDBPluginController {
         send(sb.toString());
     }
 
-    //Next/Step/Until
+    // Next/Step/Until
 
     public void next() throws IOException {
         next(false);
@@ -555,12 +548,11 @@ public class GDBPluginController {
     }
 
     public void until(String location) throws IOException {
-        String cmd =
-            "-exec-until" + (location != null && !location.isEmpty() ? " " + location : "");
+        String cmd = "-exec-until" + (location != null && !location.isEmpty() ? " " + location : "");
         send(cmd);
     }
 
-    //Instruction
+    // Instruction
 
     public void nextInstruction() throws IOException {
         nextInstruction(false);
@@ -588,7 +580,7 @@ public class GDBPluginController {
         send(cmd);
     }
 
-    //Finish/Return
+    // Finish/Return
 
     public void finish() throws IOException {
         finish(false);
@@ -614,7 +606,7 @@ public class GDBPluginController {
         send("-exec-jump " + location);
     }
 
-    //Stack commands
+    // Stack commands
 
     public void enableFrameFilters() throws IOException {
         send("-enable-frame-filters");
@@ -711,7 +703,7 @@ public class GDBPluginController {
         send("-stack-select-frame " + frameNumber);
     }
 
-    //Variable object commands
+    // Variable object commands
 
     public void enablePrettyPrinting() throws IOException {
         send("-enable-pretty-printing");
@@ -846,7 +838,7 @@ public class GDBPluginController {
         send("-var-set-visualizer " + name + " " + visualizer);
     }
 
-    //Dissasemble commands
+    // Dissasemble commands
 
     public void dataDisassembleRange(String start, String end) throws IOException {
         if (start == null || start.isEmpty() || end == null || end.isEmpty()) {
@@ -890,7 +882,7 @@ public class GDBPluginController {
         send("-data-disassemble -s " + start + " -e " + end + " --source -- 0");
     }
 
-    //Expression evaluation commands
+    // Expression evaluation commands
 
     public void dataEvaluateExpression(String expr) throws IOException {
         if (expr == null || expr.isEmpty()) {
@@ -899,7 +891,7 @@ public class GDBPluginController {
         send("-data-evaluate-expression \"" + expr + "\"");
     }
 
-    //Register commands
+    // Register commands
 
     public void dataListChangedRegisters() throws IOException {
         send("-data-list-changed-registers");
@@ -923,7 +915,7 @@ public class GDBPluginController {
         send(sb.toString());
     }
 
-    //Memory commands
+    // Memory commands
 
     public void dataReadMemoryBytes(String address, int count) throws IOException {
         if (address == null || address.isEmpty()) {
@@ -955,7 +947,7 @@ public class GDBPluginController {
         send("-data-write-memory-bytes " + address + " \"" + hexBytes + "\" " + count);
     }
 
-    //Tracepoints commands
+    // Tracepoints commands
 
     public void traceFindNone() throws IOException {
         send("-trace-find none");
@@ -1003,8 +995,7 @@ public class GDBPluginController {
         }
         if (value == null || value.isEmpty()) {
             send("-trace-define-variable " + name);
-        }
-        else {
+        } else {
             send("-trace-define-variable " + name + " " + value);
         }
     }
@@ -1036,9 +1027,9 @@ public class GDBPluginController {
     public void traceFrameCollectedFull(int varMode, int compMode, char regFormat)
             throws IOException {
         send("-trace-frame-collected --var-print-values " + varMode +
-            " --comp-print-values " + compMode +
-            " --registers-format " + regFormat +
-            " --memory-contents");
+                " --comp-print-values " + compMode +
+                " --registers-format " + regFormat +
+                " --memory-contents");
     }
 
     public void traceStart() throws IOException {
@@ -1068,7 +1059,7 @@ public class GDBPluginController {
         send(sb.toString());
     }
 
-    //Symbol commands
+    // Symbol commands
 
     public void symbolInfoFunctions() throws IOException {
         send("-symbol-info-functions");
@@ -1171,13 +1162,12 @@ public class GDBPluginController {
         send("-symbol-list-lines " + filename);
     }
 
-    //File commands
+    // File commands
 
     public void fileExecAndSymbols(String file) throws IOException {
         if (file == null || file.isEmpty()) {
             send("-file-exec-and-symbols");
-        }
-        else {
+        } else {
             send("-file-exec-and-symbols " + file);
         }
     }
@@ -1185,8 +1175,7 @@ public class GDBPluginController {
     public void fileExecFile(String file) throws IOException {
         if (file == null || file.isEmpty()) {
             send("-file-exec-file");
-        }
-        else {
+        } else {
             send("-file-exec-file " + file);
         }
     }
@@ -1202,8 +1191,7 @@ public class GDBPluginController {
     public void fileListExecSourceFiles(String regexp) throws IOException {
         if (regexp == null || regexp.isEmpty()) {
             send("-file-list-exec-source-files");
-        }
-        else {
+        } else {
             send("-file-list-exec-source-files -- " + regexp);
         }
     }
@@ -1229,8 +1217,7 @@ public class GDBPluginController {
     public void fileListSharedLibraries(String regexp) throws IOException {
         if (regexp == null || regexp.isEmpty()) {
             send("-file-list-shared-libraries");
-        }
-        else {
+        } else {
             send("-file-list-shared-libraries " + regexp);
         }
     }
@@ -1238,13 +1225,12 @@ public class GDBPluginController {
     public void fileSymbolFile(String file) throws IOException {
         if (file == null || file.isEmpty()) {
             send("-file-symbol-file");
-        }
-        else {
+        } else {
             send("-file-symbol-file " + file);
         }
     }
 
-    //Target commands
+    // Target commands
 
     public void targetAttach(String pidOrGidOrFile) throws IOException {
         if (pidOrGidOrFile == null || pidOrGidOrFile.isEmpty()) {
@@ -1260,8 +1246,7 @@ public class GDBPluginController {
     public void targetDetach(String pidOrGid) throws IOException {
         if (pidOrGid == null || pidOrGid.isEmpty()) {
             send("-target-detach");
-        }
-        else {
+        } else {
             send("-target-detach " + pidOrGid);
         }
     }
@@ -1284,13 +1269,12 @@ public class GDBPluginController {
         }
         if (parameters == null || parameters.isEmpty()) {
             send("-target-select " + type);
-        }
-        else {
+        } else {
             send("-target-select " + type + " " + parameters);
         }
     }
 
-    //File transfer commands
+    // File transfer commands
 
     public void targetFilePut(String hostFile, String targetFile) throws IOException {
         if (hostFile == null || hostFile.isEmpty() || targetFile == null || targetFile.isEmpty()) {
@@ -1313,7 +1297,7 @@ public class GDBPluginController {
         send("-target-file-delete " + targetFile);
     }
 
-    //Ada exception commands
+    // Ada exception commands
 
     public void infoAdaExceptions() throws IOException {
         send("-info-ada-exceptions");
@@ -1322,13 +1306,12 @@ public class GDBPluginController {
     public void infoAdaExceptions(String regexp) throws IOException {
         if (regexp == null || regexp.isEmpty()) {
             send("-info-ada-exceptions");
-        }
-        else {
+        } else {
             send("-info-ada-exceptions " + regexp);
         }
     }
 
-    //GDB support commands
+    // GDB support commands
 
     public void infoGdbMiCommand(String commandName) throws IOException {
         if (commandName == null || commandName.isEmpty()) {
@@ -1347,7 +1330,7 @@ public class GDBPluginController {
         send("-list-target-features");
     }
 
-    //GDB miscellaneous commands
+    // GDB miscellaneous commands
 
     public void gdbExit() throws IOException {
         send("-gdb-exit");
@@ -1392,8 +1375,7 @@ public class GDBPluginController {
     public void infoOs(String type) throws IOException {
         if (type == null || type.isEmpty()) {
             send("-info-os");
-        }
-        else {
+        } else {
             send("-info-os " + type);
         }
     }
@@ -1417,14 +1399,14 @@ public class GDBPluginController {
         send("-complete \"" + command + "\"");
     }
 
-    //General
+    // General
 
     public void exit() throws IOException {
         send("-gdb-exit");
         shutdown();
     }
 
-    //Main function of sending commands from user to gdb
+    // Main function of sending commands from user to gdb
 
     public void send(String cmd) throws IOException {
         gdbIn.write(cmd);
@@ -1433,7 +1415,8 @@ public class GDBPluginController {
         writeOutput("[user] " + cmd);
     }
 
-    //Function to parse PC (counter of where the program stopped) from *stopped and notify stopListener
+    // Function to parse PC (counter of where the program stopped) from *stopped and
+    // notify stopListener
 
     private static long parsePcFromStopped(String line) {
         Pattern p = Pattern.compile("addr=\"(0x[0-9a-fA-F]+)\"");
@@ -1450,7 +1433,7 @@ public class GDBPluginController {
         this.stopListener = l;
     }
 
-    //Main function to read output from gdb, parse it and notify outputListener
+    // Main function to read output from gdb, parse it and notify outputListener
 
     private void readGdbOutput() {
         try {
@@ -1465,8 +1448,7 @@ public class GDBPluginController {
                 }
 
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             writeOutput("GDB output stopped");
         }
     }
@@ -1486,7 +1468,7 @@ public class GDBPluginController {
         ioThreads.shutdownNow();
     }
 
-    //Reading memory or register (TRACKING)
+    // Reading memory or register (TRACKING)
 
     private synchronized String readResultRecord() throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -1523,13 +1505,11 @@ public class GDBPluginController {
                 int end = reply.indexOf("\"", start);
                 String hex = reply.substring(start, end);
                 return new BigInteger(hex.replace("0x", ""), 16);
-            }
-            else {
+            } else {
                 throw new RuntimeException("Failed to read register " + regName + ": " + reply);
             }
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("IO error reading register " + regName, e);
         }
     }
@@ -1551,16 +1531,14 @@ public class GDBPluginController {
                     result[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
                 }
                 return result;
-            }
-            else {
+            } else {
                 throw new RuntimeException(
-                    "Failed to read memory at 0x" + Long.toHexString(addr) + ": " + reply);
+                        "Failed to read memory at 0x" + Long.toHexString(addr) + ": " + reply);
             }
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(
-                "IO error reading memory at 0x" + Long.toHexString(addr), e);
+                    "IO error reading memory at 0x" + Long.toHexString(addr), e);
         }
     }
 

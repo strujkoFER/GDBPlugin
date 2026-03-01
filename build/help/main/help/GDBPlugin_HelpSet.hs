@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!DOCTYPE helpset PUBLIC "-//Sun Microsystems Inc.//DTD JavaHelp HelpSet Version 2.0//EN" "http://java.sun.com/products/javahelp/helpset_2_0.dtd">
 
-<!-- HelpSet auto-generated on Sat Jan 24 13:09:27 CET 2026 -->
+<!-- HelpSet auto-generated on Sun Mar 01 18:27:47 CET 2026 -->
 <helpset version="2.0">
 	<title>GDBPlugin HelpSet</title>
 	<maps>
