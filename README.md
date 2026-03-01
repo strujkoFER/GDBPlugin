@@ -1,0 +1,1 @@
+GDB plugin for Ghidra
