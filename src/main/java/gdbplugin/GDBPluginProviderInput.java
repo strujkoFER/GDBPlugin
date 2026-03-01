@@ -71,8 +71,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
                 if (plugin instanceof GDBPluginPlugin gdbPlugin) {
                     gdbPlugin.startGDBPlugin();
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Error: " + ex.getMessage());
                 ex.printStackTrace();
             }
@@ -99,8 +98,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
                     controller.resetEverything();
                     gdbPlugin.startGDBPlugin();
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Error: " + ex.getMessage());
                 ex.printStackTrace();
             }
@@ -111,8 +109,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
         restartProgramButton.addActionListener(e -> {
             try {
                 controller.restartProgram();
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Error: " + ex.getMessage());
                 ex.printStackTrace();
             }
@@ -128,8 +125,8 @@ public class GDBPluginProviderInput extends ComponentProvider {
         buildCommandPanels();
 
         scrollPane = new JScrollPane(panel,
-            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getViewport().setBackground(BACKGROUND_COLOR);
 
         scrollPane.setPreferredSize(new Dimension(400, 400));
@@ -147,7 +144,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
         commonPanel.setLayout(new BoxLayout(commonPanel, BoxLayout.Y_AXIS));
         commonPanel.setBackground(COMMON_COLOR);
         commonPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(COMMON_COLOR, 2), "Common Commands"));
+                BorderFactory.createLineBorder(COMMON_COLOR, 2), "Common Commands"));
 
         for (String methodName : ButtonsData.COMMON_METHODS) {
             try {
@@ -157,8 +154,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
                     commonPanel.add(cmdPanel);
                     allCommandPanels.add(cmdPanel);
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Error: " + ex.getMessage());
                 ex.printStackTrace();
             }
@@ -183,8 +179,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
                     panel.add(cmdPanel);
                     allCommandPanels.add(cmdPanel);
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Error: " + ex.getMessage());
                 ex.printStackTrace();
             }
@@ -206,8 +201,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
         for (JPanel cmdPanel : allCommandPanels) {
             if (searchText.isEmpty()) {
                 cmdPanel.setVisible(true);
-            }
-            else {
+            } else {
                 String title = ((javax.swing.border.TitledBorder) cmdPanel.getBorder()).getTitle();
                 cmdPanel.setVisible(title.toLowerCase().contains(searchText));
             }
@@ -241,8 +235,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
             JComponent inputComponent;
             if (type == boolean.class || type == Boolean.class) {
                 inputComponent = new JCheckBox();
-            }
-            else {
+            } else {
                 inputComponent = new JTextField(10);
             }
 
@@ -291,12 +284,10 @@ public class GDBPluginProviderInput extends ComponentProvider {
                         String value = tf.getText().trim();
                         if (value.isEmpty()) {
                             args[i++] = null;
-                        }
-                        else {
+                        } else {
                             args[i++] = convertStringToType(value, type);
                         }
-                    }
-                    else if (comp instanceof JCheckBox cb) {
+                    } else if (comp instanceof JCheckBox cb) {
                         args[i++] = cb.isSelected();
                     }
                 }
@@ -305,8 +296,7 @@ public class GDBPluginProviderInput extends ComponentProvider {
                 if (result != null) {
                     JOptionPane.showMessageDialog(panel, "Result: " + result.toString());
                 }
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Error: " + ex.getMessage());
                 ex.printStackTrace();
             }

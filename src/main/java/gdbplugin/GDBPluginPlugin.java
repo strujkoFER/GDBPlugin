@@ -7,13 +7,7 @@ import ghidra.framework.plugintool.*;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.util.Msg;
 
-@PluginInfo(
-	status = PluginStatus.STABLE,
-	packageName = ExamplesPluginPackage.NAME,
-	category = PluginCategoryNames.DEBUGGER,
-	shortDescription = "Control GDB",
-	description = "Plugin to control GDB and track variables"
-)
+@PluginInfo(status = PluginStatus.STABLE, packageName = ExamplesPluginPackage.NAME, category = PluginCategoryNames.DEBUGGER, shortDescription = "Control GDB", description = "Plugin to control GDB and track variables")
 public class GDBPluginPlugin extends ProgramPlugin {
 
 	private GDBPluginController gdbController;
@@ -39,8 +33,7 @@ public class GDBPluginPlugin extends ProgramPlugin {
 	}
 
 	public void setActiveProgram() {
-		currentProgram =
-			tool.getService(ghidra.app.services.ProgramManager.class).getCurrentProgram();
+		currentProgram = tool.getService(ghidra.app.services.ProgramManager.class).getCurrentProgram();
 	}
 
 	public void startGDBPlugin() {
