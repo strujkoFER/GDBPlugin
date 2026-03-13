@@ -126,17 +126,8 @@ public class GDBPluginController {
 
     public void restartProgram() {
         try {
-            if (currentProgram == null) {
-                writeOutput("No program loaded");
-                return;
-            }
-
-            if (gdb != null) {
-                send("-exec-abort");
-            }
-
-            send("-file-exec-and-symbols \"" + currentProgram.getExecutablePath() + "\"");
             send("-exec-run");
+            return;
 
         } catch (IOException e) {
             writeOutput("Error restarting program: " + e.getMessage());
