@@ -1426,10 +1426,16 @@ public class GDBPluginController {
 
     // Main function to read output from gdb, parse it and notify outputListener
 
+    // Ovdje je moguće s ovime možda popraviti reset jer je problem kada
+    // readGdbOutput pročita EOF (end of file) onda prestane raditi pa s ovime
+    // persista, ali blokira dalje komande
+
+    // boolean open = true;
+
     private void readGdbOutput() {
         try {
             String line;
-            while ((line = gdbOut.readLine()) != null) {
+            while (((line = gdbOut.readLine()) != null)/* && open */) {
                 handleGdbEvent(line);
                 if (line.startsWith("*stopped")) {
                     long pc = parsePcFromStopped(line);
