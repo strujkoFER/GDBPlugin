@@ -2,11 +2,17 @@ package gdbplugin;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ghidra.program.model.address.Address;
+import ghidra.program.model.address.AddressIterator;
+import ghidra.program.model.address.AddressSet;
+import ghidra.program.model.address.AddressSetView;
+import ghidra.program.model.address.AddressSpace;
 import ghidra.program.model.listing.Program;
 
 public class GDBPluginController {
@@ -45,6 +51,12 @@ public class GDBPluginController {
 
     // Starting everything
 
+    private Address GhidraEntryAddress;
+
+    private Address GDBEntryAddress;
+
+    private boolean startiGDBOffset;
+
     public void startEverything(Program program, Integer port) {
         try {
 
@@ -60,11 +72,38 @@ public class GDBPluginController {
 
             programPath = programPath.replace("\\", "/");
 
+            setCurrentProgram(program, port);
+
+            // Getting Ghidra entry address (address of .text)
+
+            AddressSetView entryPoints = program.getMemory().getExecuteSet();
+
+            if (!entryPoints.isEmpty()) {
+                this.GhidraEntryAddress = entryPoints.getMinAddress();
+            } else {
+                writeOutput("No ghidra entry address");
+            }
+
+            // Ovo je za adrese za stavri izvan glavnog programa
+            /*
+             * Iterator<Address> iter =
+             * program.getSymbolTable().getExternalEntryPointIterator();
+             * 
+             * if (iter != null && iter.hasNext()) {
+             * this.GhidraEntryAddress = iter.next();
+             * } else {
+             * writeOutput("No ghidra entry address");
+             * }
+             */
+
+            this.startiGDBOffset = true;
+
             startGdb();
 
             connectToProgram(programPath);
 
             writeOutput("GDB started");
+
         } catch (IOException e) {
             writeOutput("Failed to start GDB: " + e.getMessage());
         }
@@ -1438,6 +1477,30 @@ public class GDBPluginController {
             while (((line = gdbOut.readLine()) != null)/* && open */) {
                 handleGdbEvent(line);
                 if (line.startsWith("*stopped")) {
+                    if (this.startiGDBOffset) {
+
+                        // Getting GDB Entry address from pc (address of .text)
+
+                        this.startiGDBOffset = false;
+                        try {
+
+                            // Ovdje dodati da pročita .text adresu (pomoću regexa) iz gdba kada se pošalje
+                            // "info files"
+
+                            /*
+                             * Long pcVal = parsePcFromStopped(line);
+                             * 
+                             * AddressSpace space =
+                             * currentProgram.getAddressFactory().getDefaultAddressSpace();
+                             * this.GDBEntryAddress = space.getAddress(pcVal);
+                             */
+                        } catch (Exception e) {
+                            writeOutput("Failed in getting GDB entry adress");
+                        }
+
+                        writeOutput("GDB Entry: " + this.GDBEntryAddress);
+                        writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
+                    }
                     long pc = parsePcFromStopped(line);
                     if (stopListener != null) {
                         stopListener.onStopped(pc);
