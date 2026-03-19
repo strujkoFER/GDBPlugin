@@ -84,7 +84,8 @@ public class GDBPluginController {
                 writeOutput("No ghidra entry address");
             }
 
-            // Ovo je za adrese za stavri izvan glavnog programa
+            // Ovo je za adrese za stvari izvan glavnog programa
+            // Nije nam potrebno
             /*
              * Iterator<Address> iter =
              * program.getSymbolTable().getExternalEntryPointIterator();
@@ -132,6 +133,7 @@ public class GDBPluginController {
         send("-file-exec-and-symbols \"" + normalizedPath + "\"");
         configureInferiorConsole();
         send("starti");
+        send("-interpreter-exec console \"info files\"");
     }
 
     // Function to create a console that simulates real output of running the
@@ -1471,36 +1473,51 @@ public class GDBPluginController {
 
     // boolean open = true;
 
+    private static final Pattern TEXT_LOWEST_ADDRESS = Pattern.compile(
+            "\\s*([0-9a-fx]+) - ([0-9a-fx]+) is \\.text",
+            Pattern.CASE_INSENSITIVE);
+
     private void readGdbOutput() {
         try {
             String line;
             while (((line = gdbOut.readLine()) != null)/* && open */) {
                 handleGdbEvent(line);
-                if (line.startsWith("*stopped")) {
-                    if (this.startiGDBOffset) {
+                if (this.startiGDBOffset) {
 
-                        // Getting GDB Entry address from pc (address of .text)
+                    // Getting GDB Entry address from pc (address of .text)
 
-                        this.startiGDBOffset = false;
-                        try {
+                    try {
 
-                            // Ovdje dodati da pročita .text adresu (pomoću regexa) iz gdba kada se pošalje
-                            // "info files"
+                        // Ovdje dodati da pročita .text adresu (pomoću regexa) iz gdba kada se pošalje
+                        // "info files"
 
-                            /*
-                             * Long pcVal = parsePcFromStopped(line);
-                             * 
-                             * AddressSpace space =
-                             * currentProgram.getAddressFactory().getDefaultAddressSpace();
-                             * this.GDBEntryAddress = space.getAddress(pcVal);
-                             */
-                        } catch (Exception e) {
-                            writeOutput("Failed in getting GDB entry adress");
+                        Matcher Lowest_address = TEXT_LOWEST_ADDRESS.matcher(line);
+
+                        if (Lowest_address.find()) {
+                            this.startiGDBOffset = false;
+                            long Lowest_address_long = Long.decode(Lowest_address.group(1));
+                            this.GDBEntryAddress = currentProgram.getAddressFactory().getDefaultAddressSpace()
+                                    .getAddress(Lowest_address_long);
                         }
 
-                        writeOutput("GDB Entry: " + this.GDBEntryAddress);
-                        writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
+                        /*
+                         * Long pcVal = parsePcFromStopped(line);
+                         * 
+                         * AddressSpace space =
+                         * currentProgram.getAddressFactory().getDefaultAddressSpace();
+                         * this.GDBEntryAddress = space.getAddress(pcVal);
+                         */
+                    } catch (Exception e) {
+                        writeOutput("Failed in getting GDB entry adress");
                     }
+
+                }
+                if (line.startsWith("*stopped")) {
+
+                    // Debug for .text addresses
+                    writeOutput("GDB Entry: " + this.GDBEntryAddress);
+                    writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
+
                     long pc = parsePcFromStopped(line);
                     if (stopListener != null) {
                         stopListener.onStopped(pc);
