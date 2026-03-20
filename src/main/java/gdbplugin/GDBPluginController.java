@@ -22,6 +22,8 @@ public class GDBPluginController {
     private BufferedWriter gdbIn;
     private BufferedReader gdbOut;
 
+    private long GDBGhidraOffset;
+
     private final ExecutorService ioThreads = Executors.newFixedThreadPool(2);
 
     private final GDBPluginOutputParser outputParser = new GDBPluginOutputParser();
@@ -200,7 +202,7 @@ public class GDBPluginController {
         if (ignoreCount != null)
             sb.append(" -i ").append(ignoreCount);
 
-        sb.append(" ").append(location);
+        sb.append(" ").append(checkIfAddress(location));
 
         send(sb.toString());
     }
@@ -1498,6 +1500,8 @@ public class GDBPluginController {
                             long Lowest_address_long = Long.decode(Lowest_address.group(1));
                             this.GDBEntryAddress = currentProgram.getAddressFactory().getDefaultAddressSpace()
                                     .getAddress(Lowest_address_long);
+
+                            this.GDBGhidraOffset = this.GDBEntryAddress.subtract(this.GhidraEntryAddress);
                         }
 
                         /*
@@ -1515,8 +1519,8 @@ public class GDBPluginController {
                 if (line.startsWith("*stopped")) {
 
                     // Debug for .text addresses
-                    writeOutput("GDB Entry: " + this.GDBEntryAddress);
-                    writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
+                    //writeOutput("GDB Entry: " + this.GDBEntryAddress);
+                    //writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
 
                     long pc = parsePcFromStopped(line);
                     if (stopListener != null) {
@@ -1543,6 +1547,37 @@ public class GDBPluginController {
         if (gdb != null)
             gdb.destroy();
         ioThreads.shutdownNow();
+    }
+
+    // Function to check if input is an addres and if it is then parse it and add
+    // the GhidraGDBOffset
+
+    public String checkIfAddress(String location) {
+        location = location.trim();
+
+        if (location.isEmpty()) {
+            return location;
+        }
+
+        String original = location;
+
+        if (location.startsWith("*")) {
+            location = location.substring(1).trim();
+        }
+
+        long address;
+
+        if (location.matches("^0[xX][0-9a-fA-F]+$")) {
+            address = (Long.parseUnsignedLong(location.substring(2), 16) + this.GDBGhidraOffset);
+        } else if (location.matches("^[0-9a-fA-F]+$")) {
+            address = (Long.parseUnsignedLong(location, 16) + this.GDBGhidraOffset);
+        } else {
+            return original;
+        }
+
+        String addressString = "0x" + Long.toUnsignedString(address, 16);
+
+        return "*" + addressString;
     }
 
     // Reading memory or register (TRACKING)
