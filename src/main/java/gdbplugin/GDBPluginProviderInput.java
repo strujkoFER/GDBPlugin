@@ -23,8 +23,8 @@ import java.util.Set;
 
 public class GDBPluginProviderInput extends ComponentProvider {
 
-    private static final Color BACKGROUND_COLOR = new Color(0xFFE1FF);
-    private static final Color COMMON_COLOR = new Color(0xE4B1F0);
+    private static final Color BACKGROUND_COLOR = new Color(0xE8EDF2);
+    private static final Color COMMON_COLOR = new Color(0xF2EAE0);
 
     private JPanel panel;
     private JScrollPane scrollPane;

@@ -2,18 +2,34 @@ package gdbplugin;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ghidra.app.decompiler.ClangFuncNameToken;
+import ghidra.app.decompiler.ClangToken;
+import ghidra.app.decompiler.component.DecompilerUtils;
+import ghidra.app.plugin.core.decompile.DecompilerActionContext;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressIterator;
 import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.address.AddressSpace;
+import ghidra.program.model.lang.Register;
 import ghidra.program.model.listing.Program;
+import ghidra.program.model.pcode.HighFunctionShellSymbol;
+import ghidra.program.model.pcode.HighSymbol;
+import ghidra.program.model.pcode.HighVariable;
+import ghidra.program.model.pcode.PcodeOp;
+import ghidra.program.model.pcode.Varnode;
+import ghidra.program.model.symbol.SourceType;
 
 public class GDBPluginController {
 
@@ -39,6 +55,63 @@ public class GDBPluginController {
     }
 
     private GDBOutputListener outputListener;
+
+    public LinkedHashMap<String, Varnode[]> trackedVariables = new LinkedHashMap<>();
+
+    HashMap<Integer, Integer> pcodeArgumentMapping = new HashMap<Integer, Integer>();
+
+    public void initialisePcodeArgumentMapping() {
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.COPY, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.LOAD, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.STORE, 2);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.PIECE, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.SUBPIECE, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_ZEXT, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SEXT, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_EQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_NOTEQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_LESS, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SLESS, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_LESSEQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SLESSEQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_ADD, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SBORROW, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_2COMP, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_NEGATE, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_XOR, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_OR, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_AND, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_LEFT, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_RIGHT, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SRIGHT, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_MULT, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_DIV, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_REM, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SDIV, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT_SREM, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.BOOL_NEGATE, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.BOOL_XOR, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.BOOL_AND, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.BOOL_OR, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_EQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_NOTEQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_LESS, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_LESSEQUAL, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_ADD, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_SUB, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_MULT, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_DIV, 1);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_NEG, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_ABS, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_SQRT, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_CEIL, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_FLOOR, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_ROUND, 0);
+        pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT_NAN, 0);
+        // pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.INT2FLOAT, 0);
+        // pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.FLOAT2FLOAT, 0);
+        // pcodeArgumentMapping.put(ghidra.program.model.pcode.PcodeOp.TRUNC, 0);
+    }
 
     // function to write output on screen
 
@@ -104,6 +177,10 @@ public class GDBPluginController {
             startGdb();
 
             connectToProgram(programPath);
+
+            initialisePcodeArgumentMapping();
+
+            trackedVariables.clear();
 
             writeOutput("GDB started");
 
@@ -1479,18 +1556,20 @@ public class GDBPluginController {
             "\\s*([0-9a-fx]+) - ([0-9a-fx]+) is \\.text",
             Pattern.CASE_INSENSITIVE);
 
+    public String globalReply;
+
     private void readGdbOutput() {
         try {
             String line;
             while (((line = gdbOut.readLine()) != null)/* && open */) {
                 handleGdbEvent(line);
+                globalReply = line;
                 if (this.startiGDBOffset) {
 
                     // Getting GDB Entry address from pc (address of .text)
 
                     try {
 
-                        // Ovdje dodati da pročita .text adresu (pomoću regexa) iz gdba kada se pošalje
                         // "info files"
 
                         Matcher Lowest_address = TEXT_LOWEST_ADDRESS.matcher(line);
@@ -1519,8 +1598,8 @@ public class GDBPluginController {
                 if (line.startsWith("*stopped")) {
 
                     // Debug for .text addresses
-                    //writeOutput("GDB Entry: " + this.GDBEntryAddress);
-                    //writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
+                    // writeOutput("GDB Entry: " + this.GDBEntryAddress);
+                    // writeOutput("Ghidra Entry: " + this.GhidraEntryAddress);
 
                     long pc = parsePcFromStopped(line);
                     if (stopListener != null) {
@@ -1580,36 +1659,163 @@ public class GDBPluginController {
         return "*" + addressString;
     }
 
-    // Reading memory or register (TRACKING)
+    // Varnodes
 
-    private synchronized String readResultRecord() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String line;
-
-        while ((line = gdbOut.readLine()) != null) {
-            line = line.trim();
-            if (line.isEmpty())
-                continue;
-
-            sb.append(line);
-
-            if (line.startsWith("^done") || line.startsWith("^error")) {
-                break;
-            }
+    public void trackVariable(DecompilerActionContext context) {
+        ClangToken token = context.getTokenAtCursor();
+        if (token == null) {
+            writeOutput("Varnodes -> token is null");
+            return;
         }
 
-        if (sb.length() == 0) {
-            throw new IOException("No result record");
+        HighSymbol highSymbol = token.getHighSymbol(context.getHighFunction());
+        if (highSymbol == null) {
+            writeOutput("Varnodes -> highSymbol is null");
+            return;
         }
 
-        return sb.toString();
+        HighVariable highVariable = highSymbol.getHighVariable();
+        if (highVariable == null) {
+            writeOutput("Varnodes -> highVariable is null");
+            return;
+        }
+
+        Varnode[] varnodes = highVariable.getInstances();
+
+        trackedVariables.put(highVariable.getName(), varnodes);
+
+        /*
+         * for (Varnode varnode : varnodes) {
+         * writeOutput("Varnode: " + varnode.getAddress());
+         * }
+         */
+
     }
+
+    public void deleteTrackedVariable(DecompilerActionContext context) {
+        ClangToken token = context.getTokenAtCursor();
+        if (token == null) {
+            writeOutput("Varnodes -> token is null");
+            return;
+        }
+
+        HighSymbol highSymbol = token.getHighSymbol(context.getHighFunction());
+        if (highSymbol == null) {
+            writeOutput("Varnodes -> highSymbol is null");
+            return;
+        }
+
+        HighVariable highVariable = highSymbol.getHighVariable();
+        if (highVariable == null) {
+            writeOutput("Varnodes -> highVariable is null");
+            return;
+        }
+
+        trackedVariables.remove(highVariable.getName());
+
+    }
+
+    public void listTrackedVariables() {
+        int id = 0;
+        for (String key : trackedVariables.keySet()) {
+            writeOutput(id + " -> " + key);
+            id += 1;
+        }
+    }
+
+    // list all variables values on stopped
+    public void listValuesTrackedVariables(long pc) {
+        for (Map.Entry<String, Varnode[]> entry : trackedVariables.entrySet()) {
+            String key = entry.getKey();
+            Varnode[] varnodes = entry.getValue();
+
+            Varnode closest = null;
+            Address closestDefAddress = null;
+
+            for (Varnode varnode : varnodes) {
+                PcodeOp pcode = varnode.getDef();
+
+                if (pcode == null) {
+                    continue;
+                }
+
+                Address defAddress = pcode.getSeqnum().getTarget();
+                if (defAddress.getOffset() <= pc) {
+                    if (closest == null || defAddress.compareTo(closestDefAddress) > 0) {
+
+                        closest = varnode;
+                        closestDefAddress = defAddress;
+                    }
+                }
+            }
+
+            if (closest == null) {
+                continue;
+            }
+
+            writeOutput(closest.toString());
+
+            String value = readVarnodeValue(closest);
+
+            writeOutput(key + "-> value: " + value);
+        }
+    }
+
+    public String readVarnodeValue(Varnode varnode) {
+        if (varnode.isConstant()) {
+            BigInteger value = BigInteger.valueOf(varnode.getOffset());
+            return value.toString();
+        } else if (varnode.isRegister()) {
+            Register reg = currentProgram.getRegister(
+                    varnode.getAddress(),
+                    varnode.getSize());
+            String regName = reg.getName();
+            BigInteger value = readRegister(regName);
+            return value.toString();
+        } else if (varnode.isAddress()) {
+            byte[] value = readMemory(varnode.getAddress().getOffset(), varnode.getSize());
+            BigInteger valueInt = new BigInteger(1, value);
+            return valueInt.toString();
+        } else if ("stack".equals(varnode.getAddress().getAddressSpace().getName())) {
+            Address address = varnode.getAddress();
+            long stackOffset = address.getOffset();
+            BigInteger rbpValue = readRegister("rbp");
+            long rbp = rbpValue.longValue();
+            long realAddr = rbp + stackOffset;
+            byte[] value = readMemory(realAddr, varnode.getSize());
+            BigInteger valueInt = new BigInteger(1, value);
+            return valueInt.toString();
+        } else if (varnode.isUnique()) {
+            writeOutput("Varnode is unique");
+        }
+
+        return "Error: Could not read varnode";
+    }
+
+    public List<Varnode> readVarnodeInputs(Varnode varnode) {
+        PcodeOp pcode = varnode.getDef();
+        List<Varnode> varnodes = new ArrayList<Varnode>();
+
+        int argsToRetrieve = pcodeArgumentMapping.getOrDefault(pcode.getOpcode(), -1);
+        if (argsToRetrieve == 0) {
+            varnodes.add(pcode.getInput(0));
+        } else if (argsToRetrieve == 1) {
+            varnodes.add(pcode.getInput(0));
+            varnodes.add(pcode.getInput(1));
+        } else if (argsToRetrieve == 2) {
+            varnodes.add(pcode.getInput(2));
+        }
+
+        return varnodes;
+    }
+
+    // Reading memory or register (TRACKING)
 
     public BigInteger readRegister(String regName) {
         try {
             send("-data-evaluate-expression $" + regName);
 
-            String reply = readResultRecord();
+            String reply = globalReply;
 
             int idx = reply.indexOf("value=\"");
             if (idx != -1) {
@@ -1630,7 +1836,7 @@ public class GDBPluginController {
         try {
             send("-data-read-memory-bytes 0x" + Long.toHexString(addr) + " " + size);
 
-            String reply = readResultRecord();
+            String reply = globalReply;
 
             int idx = reply.indexOf("contents=\"");
             if (idx != -1) {
@@ -1650,7 +1856,7 @@ public class GDBPluginController {
 
         } catch (IOException e) {
             throw new RuntimeException(
-                    "IO error reading memory at 0x" + Long.toHexString(addr), e);
+                    "IO error reading memory at 0x" + Long.toHexString(addr) + ": " + e);
         }
     }
 
