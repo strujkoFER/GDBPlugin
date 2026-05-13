@@ -1,8 +1,10 @@
 package gdbplugin;
 
 import docking.ComponentProvider;
+import docking.WindowPosition;
 import gdbplugin.GDBPluginController;
 import gdbplugin.ButtonsData;
+import ghidra.framework.plugintool.ComponentProviderAdapter;
 import ghidra.framework.plugintool.Plugin;
 
 import javax.swing.*;
@@ -21,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class GDBPluginProviderInput extends ComponentProvider {
+public class GDBPluginProviderInput extends ComponentProviderAdapter {
 
     private static final Color BACKGROUND_COLOR = new Color(0xE8EDF2);
     private static final Color COMMON_COLOR = new Color(0xF2EAE0);
@@ -39,6 +41,9 @@ public class GDBPluginProviderInput extends ComponentProvider {
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(BACKGROUND_COLOR);
+
+        setDefaultWindowPosition(WindowPosition.RIGHT);
+        setIntraGroupPosition(WindowPosition.RIGHT);
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         searchPanel.setBackground(BACKGROUND_COLOR);

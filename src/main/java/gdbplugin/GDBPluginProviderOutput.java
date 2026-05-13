@@ -1,13 +1,15 @@
 package gdbplugin;
 
 import docking.ComponentProvider;
+import docking.WindowPosition;
 import gdbplugin.GDBPluginController;
+import ghidra.framework.plugintool.ComponentProviderAdapter;
 import ghidra.framework.plugintool.Plugin;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class GDBPluginProviderOutput extends ComponentProvider {
+public class GDBPluginProviderOutput extends ComponentProviderAdapter {
 
     private JPanel panel;
     private JTextArea outputArea;
@@ -21,6 +23,9 @@ public class GDBPluginProviderOutput extends ComponentProvider {
         outputArea = new JTextArea(20, 80);
         outputArea.setEditable(false);
         outputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        setDefaultWindowPosition(WindowPosition.BOTTOM);
+        setIntraGroupPosition(WindowPosition.BOTTOM);
 
         JScrollPane scrollPane = new JScrollPane(outputArea);
         panel.add(scrollPane, BorderLayout.CENTER);
