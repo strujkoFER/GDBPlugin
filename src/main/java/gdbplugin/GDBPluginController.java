@@ -1757,7 +1757,11 @@ public class GDBPluginController {
 
             String value = readVarnodeValue(closest);
 
-            writeOutput(key + "-> value: " + value);
+            if (value == null) {
+                writeOutput("Could not get variable value");
+            } else {
+                writeOutput(key + "-> value: " + value);
+            }
         }
     }
 
@@ -1771,18 +1775,30 @@ public class GDBPluginController {
                     varnode.getSize());
             String regName = reg.getName();
             BigInteger value = readRegister(regName);
+            if (value == null) {
+                return null;
+            }
             return value.toString();
         } else if (varnode.isAddress()) {
             byte[] value = readMemory(varnode.getAddress().getOffset(), varnode.getSize());
+            if (value == null) {
+                return null;
+            }
             BigInteger valueInt = new BigInteger(1, value);
             return valueInt.toString();
         } else if ("stack".equals(varnode.getAddress().getAddressSpace().getName())) {
             Address address = varnode.getAddress();
             long stackOffset = address.getOffset();
             BigInteger rbpValue = readRegister("rbp");
+            if (rbpValue == null) {
+                return null;
+            }
             long rbp = rbpValue.longValue();
             long realAddr = rbp + stackOffset;
             byte[] value = readMemory(realAddr, varnode.getSize());
+            if (value == null) {
+                return null;
+            }
             BigInteger valueInt = new BigInteger(1, value);
             return valueInt.toString();
         } else if (varnode.isUnique()) {
@@ -1824,12 +1840,14 @@ public class GDBPluginController {
                 String hex = reply.substring(start, end);
                 return new BigInteger(hex.replace("0x", ""), 16);
             } else {
-                throw new RuntimeException("Failed to read register " + regName + ": " + reply);
+                writeOutput("Failed to read register " + regName + ": " + reply);
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("IO error reading register " + regName, e);
+            writeOutput("IO error reading register " + regName);
         }
+
+        return null;
     }
 
     public byte[] readMemory(long addr, int size) {
@@ -1850,14 +1868,16 @@ public class GDBPluginController {
                 }
                 return result;
             } else {
-                throw new RuntimeException(
+                writeOutput(
                         "Failed to read memory at 0x" + Long.toHexString(addr) + ": " + reply);
             }
 
         } catch (IOException e) {
-            throw new RuntimeException(
-                    "IO error reading memory at 0x" + Long.toHexString(addr) + ": " + e);
+            writeOutput(
+                    "IO error reading memory at 0x" + Long.toHexString(addr));
         }
+
+        return null;
     }
 
 }
