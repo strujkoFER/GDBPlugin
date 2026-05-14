@@ -1,17 +1,17 @@
 GDB plugin for Ghidra
 
 
-#About
+# About
 
 This project was started as a Bachelors degree project and will continue it's development. I started it because of a need for tracking variables and easier dynamic analysis during CTF-s.
 
 
-#Ghidra installation guide
+# Ghidra installation guide
 
 To install Ghidra you can look at the guide at [Ghidra Github](https://github.com/nationalsecurityagency/ghidra).
 
 
-#Plugin installation guide
+# Plugin installation guide
 
 The plugin itself is a .zip file located inside folder dist. You can just download that and then open up Ghidra and on the first window go to File -> Install Extensions.
 
@@ -35,7 +35,7 @@ Press "Yes" and after that check the checkbox on the plugin and press "OK".
 If you don't see the windows right away, you can go to windows tab and find them there. You can drag them with mouse to wherever you want.
 
 
-#Development
+# Development
 
 This is currently still my Bachelors degree project so any pull requests will be ignored for the time being. Thank you for understanding.
 
